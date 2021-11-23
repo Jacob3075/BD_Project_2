@@ -15,7 +15,7 @@ from tqdm.auto import tqdm
 parser = argparse.ArgumentParser(
     description='Streams a file to a Spark Streaming Context')
 parser.add_argument('--file', '-f', help='File to stream', required=False,
-                    type=str, default="cifar")  # path to file for streaming
+                    type=str, default="cifar")    # path to file for streaming
 parser.add_argument('--batch-size', '-b', help='Batch size',
                     required=False, type=int, default=100)  # default batch_size is 100
 parser.add_argument('--endless', '-e', help='Enable endless stream',
@@ -25,7 +25,7 @@ TCP_IP = "localhost"
 TCP_PORT = 6100
 
 
-def connectTCP():  # connect to the TCP server -- there is no need to modify this function
+def connectTCP():   # connect to the TCP server -- there is no need to modify this function
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((TCP_IP, TCP_PORT))
@@ -49,11 +49,11 @@ def sendCIFARBatchFileToSpark(tcp_connection, input_batch_file):
     # setting feature size to form the payload later
     feature_size = len(data[0])
     # iterate over batches of size batch_size
-    for image_index in tqdm(range(0, len(data) - batch_size + 2, batch_size)):
+    for image_index in tqdm(range(0, len(data)-batch_size+2, batch_size)):
         # load batch of images
-        image_data_batch = data[image_index:image_index + batch_size]
+        image_data_batch = data[image_index:image_index+batch_size]
         image_label = labels[image_index:image_index +
-                                         batch_size]  # load batch of labels
+                                         batch_size]        # load batch of labels
         payload = dict()
         for mini_batch_index in range(len(image_data_batch)):
             payload[mini_batch_index] = dict()
@@ -76,10 +76,10 @@ def streamCIFARDataset(tcp_connection, dataset_type='cifar'):
     print("Starting to stream CIFAR data")
     CIFAR_BATCHES = [
         'data_batch_1',
-        # 'data_batch_2',   # uncomment to stream the second training dataset
-        # 'data_batch_3',   # uncomment to stream the third training dataset
-        # 'data_batch_4',   # uncomment to stream the fourth training dataset
-        # 'data_batch_5',    # uncomment to stream the fifth training dataset
+        'data_batch_2',   # uncomment to stream the second training dataset
+        'data_batch_3',   # uncomment to stream the third training dataset
+        'data_batch_4',   # uncomment to stream the fourth training dataset
+        'data_batch_5',    # uncomment to stream the fifth training dataset
         # 'test_batch'      # uncomment to stream the test dataset
     ]
     for batch in CIFAR_BATCHES:
@@ -96,11 +96,11 @@ def sendPokemonBatchFileToSpark(tcp_connection, input_batch_file):
     data = batch_data['img']
     labels = batch_data['label']
     # iterate over batches of size batch_size
-    for image_index in tqdm(range(0, len(data) - batch_size + 2, batch_size)):
+    for image_index in tqdm(range(0, len(data)-batch_size+2, batch_size)):
         # load batch of images
-        image_data_batch = data[image_index:image_index + batch_size]
+        image_data_batch = data[image_index:image_index+batch_size]
         image_label = labels[image_index:image_index +
-                                         batch_size]  # load batch of labels
+                                         batch_size]        # load batch of labels
         payload = dict()
         for mini_batch_index in range(len(image_data_batch)):
             payload[mini_batch_index] = dict()
@@ -134,11 +134,11 @@ def streamPokemonDataset(tcp_connection, dataset_type='pokemon'):
         time.sleep(5)
 
 
-def streamDataset(tcp_connection, dataset_type):  # function to stream a dataset
+def streamDataset(tcp_connection, dataset_type):    # function to stream a dataset
     # this is the function you need to recreate to work with custom datasets
     # if your dataset has multiple files (train, test, etc), modify and use this function to stream your dataset
     print(f"Starting to stream {dataset_type} dataset")
-    DATASETS = [  # list of files in your dataset to stream
+    DATASETS = [    # list of files in your dataset to stream
         "train",
         # "test"    # uncomment to stream the test dataset
     ]
@@ -147,9 +147,9 @@ def streamDataset(tcp_connection, dataset_type):  # function to stream a dataset
         time.sleep(5)
 
 
-def streamCSVFile(tcp_connection, input_file):  # stream a CSV file to Spark
+def streamCSVFile(tcp_connection, input_file):    # stream a CSV file to Spark
     '''
-    Each batch is streamed as a JSON file and has the following shape. 
+    Each batch is streamed as a JSON file and has the following shape.
     The outer indices are the indices of each row in a batch and go from 0 - batch_size-1
     The inner indices are the indices of each column in a row and go from 0 - feature_size-1
 
@@ -179,9 +179,9 @@ def streamCSVFile(tcp_connection, input_file):  # stream a CSV file to Spark
     df = pd.read_csv(input_file)  # load the entire dataset
     values = df.values.tolist()  # obtain the values of the dataset
     # loop through batches of size batch_size lines
-    for i in tqdm(range(0, len(values) - batch_size + 2, batch_size)):
-        send_data = values[i:i + batch_size]  # load batch of rows
-        payload = dict()  # create a payload
+    for i in tqdm(range(0, len(values)-batch_size+2, batch_size)):
+        send_data = values[i:i+batch_size]  # load batch of rows
+        payload = dict()    # create a payload
         # iterate over the batch
         for mini_batch_index in range(len(send_data)):
             payload[mini_batch_index] = dict()  # create a record
@@ -213,8 +213,8 @@ def streamFile(tcp_connection, input_file):  # stream a newline delimited file t
         data = file.readlines()  # open the file and read every line
         total_lines = len(data)
         # loop through batches of size batch_size lines
-        for i in tqdm(range(0, total_lines - batch_size + 2, batch_size)):
-            send_data = data[i:i + batch_size]  # load batch of lines
+        for i in tqdm(range(0, total_lines-batch_size+2, batch_size)):
+            send_data = data[i:i+batch_size]    # load batch of lines
             # encode the payload and add a newline character (do not forget the newline in your dataset)
             send_batch = (json.dumps(send_data) + '\n').encode()
             try:
@@ -253,6 +253,8 @@ if __name__ == '__main__':
             _function(tcp_connection, input_file)
     else:
         _function(tcp_connection, input_file)
+
+    tcp_connection.close()
 
 # Setup your own dataset streamer by following the examples above.
 # If you wish to stream a single newline delimited file, use streamFile()
