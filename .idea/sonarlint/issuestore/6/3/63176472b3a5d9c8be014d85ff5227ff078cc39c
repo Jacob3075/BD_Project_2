@@ -1,0 +1,6 @@
+
+jpython:S1192Ã"LDefine a constant instead of duplicating this literal 'runtime (s)' 3 times.(ÛúĞøÿÿÿÿ
+qpython:S1186N"YAdd a nested comment explaining why this method is empty, or complete the implementation.(¤ÇŠ€
+tpython:S117Æ"WRename this local variable "X_text" to match the regular expression ^[_a-z][a-z0-9_]*$.(¶Ş¬ùıÿÿÿÿ
+opython:S117Ì"WRename this local variable "X_text" to match the regular expression ^[_a-z][a-z0-9_]*$.(íä¨ 
+7python:S125í"Remove this commented out code.(¶îÅÄ
