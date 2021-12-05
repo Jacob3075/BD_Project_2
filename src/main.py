@@ -1,28 +1,15 @@
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
-from sklearn import preprocessing as prepro
-import json
+
+from constants import Constants
+from utils import convert_to_df, get_rows_as_dicts
 
 sc = SparkContext(appName="MLSS")
-ssc = StreamingContext(sc, 5)
-lines = ssc.socketTextStream("localhost", 6100)
-
-
-def convert_to_df(rdd):
-    # TODO
-    print("RDD: ", rdd)
-
-
-def get_rows_as_dicts(line):
-    """
-    :param line: dict with each value as a single row
-    :return: list of dicts, each dict is a row in the dataset
-    """
-    return json.loads(line).values()
-
+ssc = StreamingContext(sc, batchDuration=Constants.BATCH_DURATION)
+lines = ssc.socketTextStream(hostname=Constants.LOCALHOST, port=Constants.PORT)
 
 lines.flatMap(get_rows_as_dicts) \
-    .foreachRDD(lambda rdd: convert_to_df(rdd))
+    .foreachRDD(convert_to_df)
 
 ssc.start()
 ssc.awaitTermination()
