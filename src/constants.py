@@ -19,3 +19,25 @@ class Constants:
             StructField("feature8", DoubleType())
         ]
     )
+
+    KEY_DATES = "Dates"
+    KEY_CATEGORY = "Category"
+    KEY_DESCRIPT = "Descript"
+    KEY_DAY_OF_WEEK = "DayOfWeek"
+    KEY_PD_DISTRICT = "PdDistrict"
+    KEY_RESOLUTION = "Resolution"
+    KEY_ADDRESS = "Address"
+    KEY_X = "X"
+    KEY_Y = "Y"
+
+    COLUMNS = [
+        KEY_DATES,
+        KEY_CATEGORY,
+        KEY_DESCRIPT,
+        KEY_DAY_OF_WEEK,
+        KEY_PD_DISTRICT,
+        KEY_RESOLUTION,
+        KEY_ADDRESS,
+        KEY_X,
+        KEY_Y,
+    ]
