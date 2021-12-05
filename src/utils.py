@@ -15,15 +15,14 @@ from constants import Constants
 gaussian_nb_model_global = GaussianNB()
 
 
-def convert_data_to_df(spark, data):
+def convert_data_to_df(data):
     """
-    :param spark: SparkSession needed to create dataframe
-    :type spark: SparkSession
     :param data:
     :type data: dict
     :return: Input data as dictionary converted to DataFrame
     :rtype: DataFrame
     """
+    spark = SparkSession.builder.getOrCreate()
     df = spark.createDataFrame(data=data, schema=Constants.DATA_SCHEME) \
         .toDF(*Constants.COLUMNS)
 
@@ -35,6 +34,7 @@ def convert_data_to_df(spark, data):
 
     for input_name, output_name in encoding_pairs.items():
         df = label_encoder(df, input_name, output_name)
+        # TODO: RENAME COLUMNS BACK TO ORIGINAL
 
     df = df.drop(*list(encoding_pairs.keys())) \
         .withColumn("Timestamp", to_timestamp(df["Dates"]))
@@ -45,6 +45,18 @@ def convert_data_to_df(spark, data):
 
     df.show()
     return df
+
+
+def metric_calculation(predicted_y, testing_y):
+    metric = np.unique(testing_y)
+    print(metric)
+    print("Accuracy of the model: ", accuracy_score(predicted_y, testing_y))
+    print("Accuracy of the model: ", accuracy_score(predicted_y, testing_y))
+    # print("Accuracy of the (Local) model: ", accuracy_score(predicted_y_local, testing_y))
+    # print("Accuracy of the (Local) model: ", accuracy_score(predicted_y_local, testing_y))
+    print("Classification report:")
+    print(classification_report(y_true=testing_y, y_pred=predicted_y, labels=metric))
+    # print(classification_report(y_true=testing_y, y_pred=predicted_y_local, labels=metric))
 
 
 def train_model(df):
@@ -82,29 +94,19 @@ def train_model(df):
     predicted_y_local = gaussian_nb_model_local.predict(testing_x)
 
     # Metrics is calculated here
-    metric = np.unique(testing_y)
-    print(metric)
-
-    print("Accuracy of the (Global) model: ", accuracy_score(predicted_y_global, testing_y))
-    print("Accuracy of the (Global) model: ", accuracy_score(predicted_y_global, testing_y))
-    print("Accuracy of the (Local) model: ", accuracy_score(predicted_y_local, testing_y))
-    print("Accuracy of the (Local) model: ", accuracy_score(predicted_y_local, testing_y))
-    print("Classification report:")
-    print(classification_report(y_true=testing_y, y_pred=predicted_y_global, labels=metric))
-    print(classification_report(y_true=testing_y, y_pred=predicted_y_local, labels=metric))
+    metric_calculation(predicted_y_global, testing_y)
+    metric_calculation(predicted_y_local, testing_y)
 
 
-def process_data(spark, rdd):
+def process_data(rdd):
     """
-    :param spark: SparkSession needed to create dataframe
-    :type spark: SparkSession
     :param rdd:
     :type rdd: RDD
     """
     if rdd.isEmpty():
         return
 
-    df = convert_data_to_df(spark, rdd.collect())
+    df = convert_data_to_df(rdd.collect())
     train_model(df)
 
 
