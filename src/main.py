@@ -2,15 +2,15 @@ from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 
 from constants import Constants
-from pre_processing import get_rows_as_dicts
-from train_test import train_models
+import pre_processing
+import train_test
 
 sc = SparkContext(appName="MLSS")
 ssc = StreamingContext(sc, batchDuration=Constants.BATCH_DURATION)
 lines = ssc.socketTextStream(hostname=Constants.LOCALHOST, port=Constants.PORT)
 
-lines.flatMap(get_rows_as_dicts) \
-    .foreachRDD(train_models)
+lines.flatMap(pre_processing.get_rows_as_dicts) \
+    .foreachRDD(train_test.train_models)
 
 ssc.start()
 ssc.awaitTermination()
