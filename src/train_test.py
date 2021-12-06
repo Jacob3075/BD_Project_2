@@ -1,6 +1,7 @@
 import numpy as np
 from pyspark import RDD
-from sklearn.linear_model import SGDClassifier, PassiveAggressiveClassifier
+from sklearn.linear_model import SGDClassifier, PassiveAggressiveClassifier, Perceptron
+from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB, ComplementNB
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.utils import column_or_1d
@@ -8,7 +9,8 @@ from sklearn.utils import column_or_1d
 from constants import Constants
 from pre_processing import convert_data_to_df
 
-sgd_classifier = SGDClassifier()
+gaussian = GaussianNB()
+bernoulli_classifier = BernoulliNB()
 passive_aggressive_classifier = PassiveAggressiveClassifier()
 
 category_classes = [float(x) for x in list(range(Constants.CATEGORY_LEN))]
@@ -40,20 +42,27 @@ def train_models(rdd):
 
     training_x, testing_x, training_y, testing_y = train_test_split(coord_x, coord_y, test_size=0.2, random_state=0)
 
-    _train_test_sgd(training_x, training_y, testing_x, testing_y)
+    _train_test_gaussian(training_x, training_y, testing_x, testing_y)
+    _train_test_bernoulli(training_x, training_y, testing_x, testing_y)
     _train_test_passive_aggressive(training_x, training_y, testing_x, testing_y)
 
 
-def _train_test_sgd(training_x, training_y, testing_x, testing_y):
-    sgd_classifier.partial_fit(training_x, training_y, classes=category_classes)
-    predicted_y_global = sgd_classifier.predict(testing_x)
-    _metric_calculation(predicted_y_global, testing_y, model_name="SGD")
+def _train_test_gaussian(training_x, training_y, testing_x, testing_y):
+    gaussian.partial_fit(training_x, training_y, classes=category_classes)
+    predicted_y_global = gaussian.predict(testing_x)
+    _metric_calculation(predicted_y_global, testing_y, model_name="Gaussian")
 
 
 def _train_test_passive_aggressive(training_x, training_y, testing_x, testing_y):
     passive_aggressive_classifier.partial_fit(training_x, training_y, classes=category_classes)
     predicted_y_global = passive_aggressive_classifier.predict(testing_x)
     _metric_calculation(predicted_y_global, testing_y, model_name="Passive Aggressive")
+
+
+def _train_test_bernoulli(training_x, training_y, testing_x, testing_y):
+    bernoulli_classifier.partial_fit(training_x, training_y, classes=category_classes)
+    predicted_y_global = bernoulli_classifier.predict(testing_x)
+    _metric_calculation(predicted_y_global, testing_y, model_name="Bernoulli")
 
 
 def _metric_calculation(predicted_y, testing_y, model_name):
