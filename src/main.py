@@ -14,3 +14,4 @@ lines.flatMap(pre_processing.get_rows_as_dicts) \
 
 ssc.start()
 ssc.awaitTermination()
+ssc.stop()
