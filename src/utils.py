@@ -28,25 +28,20 @@ def convert_data_to_df(data):
     df = spark.createDataFrame(data=data, schema=Constants.DATA_SCHEME) \
         .toDF(*Constants.COLUMNS)
 
-    encoding_pairs = {
-        Constants.KEY_CATEGORY: "Category_encoded",
-        Constants.KEY_DAY_OF_WEEK: "DayOfWeek_encoded",
-        Constants.KEY_PD_DISTRICT: "PdDistrict_encoded"
-    }
+    encoding_pairs = [
+        Constants.KEY_CATEGORY,
+        Constants.KEY_DAY_OF_WEEK,
+        Constants.KEY_PD_DISTRICT,
+    ]
 
-    for input_name, output_name in encoding_pairs.items():
-        df = label_encoder(df, input_name, output_name)
-        # TODO: RENAME COLUMNS BACK TO ORIGINAL
+    for input_name in encoding_pairs:
+        df = label_encoder(df, input_name)
 
-    df = df.drop(*list(encoding_pairs.keys())) \
-        .withColumn("Timestamp", to_timestamp(df["Dates"]))
+    df = df.withColumn("Timestamp", to_timestamp(df["Dates"]))
 
-    df = df.withColumn("Hour", hour(df["Timestamp"])) \
+    return df.withColumn("Hour", hour(df["Timestamp"])) \
         .withColumn("Month", month(df["Timestamp"])) \
         .withColumn("Year", year(df["Timestamp"]))
-
-    # df.show()
-    return df
 
 
 def metric_calculation(predicted_y, testing_y):
@@ -65,14 +60,14 @@ def train_model(df):
     x_columns = [
         Constants.KEY_X,
         Constants.KEY_Y,
-        f"{Constants.KEY_DAY_OF_WEEK}_encoded",
-        f"{Constants.KEY_PD_DISTRICT}_encoded",
+        Constants.KEY_DAY_OF_WEEK,
+        Constants.KEY_PD_DISTRICT,
         "Hour",
         "Month",
         "Year",
     ]
     coord_x = np.asarray(df.select(x_columns).collect())
-    coord_y = np.asarray(df.select(f"{Constants.KEY_CATEGORY}_encoded").collect())
+    coord_y = np.asarray(df.select(Constants.KEY_CATEGORY).collect())
 
     coord_y = column_or_1d(coord_y, warn=True)
 
@@ -110,17 +105,18 @@ def get_rows_as_dicts(line):
     return json.loads(line).values()
 
 
-def label_encoder(data_frame, input_column_name, output_column_name):
+def label_encoder(data_frame, input_column_name):
     """
+    Replaces the input column with encoded values
     :param data_frame: Dataframe to modify
     :type data_frame: DataFrame
     :param input_column_name: Name of the column to encode
     :type input_column_name: str
-    :param output_column_name: Encoded column name
-    :type output_column_name: str
     :return: Updated dataframe
     :rtype: DataFrame
     """
-    return StringIndexer(inputCol=input_column_name, outputCol=output_column_name) \
+    return StringIndexer(inputCol=input_column_name, outputCol=f"{input_column_name}_encoded") \
         .fit(data_frame) \
-        .transform(data_frame)
+        .transform(data_frame) \
+        .drop(input_column_name) \
+        .withColumnRenamed(existing=f"{input_column_name}_encoded", new=input_column_name)
