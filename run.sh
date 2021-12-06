@@ -1,1 +1,1 @@
-python3 ./stream.py --file crime --batch-size 40000
+python3 ./stream.py --file crime --batch-size 20000
