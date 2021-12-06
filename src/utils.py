@@ -6,13 +6,15 @@ from pyspark.ml.feature import StringIndexer
 from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import to_timestamp, hour, month, year
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
+from sklearn.utils import column_or_1d
 
 from constants import Constants
 
-gaussian_nb_model_global = GaussianNB()
+sgd_classifier = SGDClassifier()
+category_classes = [float(x) for x in list(range(Constants.CATEGORY_LEN))]
 
 
 def convert_data_to_df(data):
@@ -43,7 +45,7 @@ def convert_data_to_df(data):
         .withColumn("Month", month(df["Timestamp"])) \
         .withColumn("Year", year(df["Timestamp"]))
 
-    df.show()
+    # df.show()
     return df
 
 
@@ -51,12 +53,8 @@ def metric_calculation(predicted_y, testing_y):
     metric = np.unique(testing_y)
     print(metric)
     print("Accuracy of the model: ", accuracy_score(predicted_y, testing_y))
-    print("Accuracy of the model: ", accuracy_score(predicted_y, testing_y))
-    # print("Accuracy of the (Local) model: ", accuracy_score(predicted_y_local, testing_y))
-    # print("Accuracy of the (Local) model: ", accuracy_score(predicted_y_local, testing_y))
     print("Classification report:")
     print(classification_report(y_true=testing_y, y_pred=predicted_y, labels=metric))
-    # print(classification_report(y_true=testing_y, y_pred=predicted_y_local, labels=metric))
 
 
 def train_model(df):
@@ -76,26 +74,18 @@ def train_model(df):
     coord_x = np.asarray(df.select(x_columns).collect())
     coord_y = np.asarray(df.select(f"{Constants.KEY_CATEGORY}_encoded").collect())
 
-    print(coord_x)
-    print(coord_y)
-
-    types = np.unique(coord_y)
-    print("LENGTH: ", len(types))
+    coord_y = column_or_1d(coord_y, warn=True)
 
     training_x, testing_x, training_y, testing_y = train_test_split(coord_x, coord_y, test_size=0.2, random_state=0)
 
-    # naive bayes classifier used here
-    gaussian_nb_model_local = GaussianNB()
-    gaussian_nb_model_global.partial_fit(training_x, training_y, classes=types)
-    gaussian_nb_model_local.partial_fit(training_x, training_y, classes=types)
+    # classifier used here
+    sgd_classifier.partial_fit(training_x, training_y, classes=category_classes)
 
     # testing starts here
-    predicted_y_global = gaussian_nb_model_global.predict(testing_x)
-    predicted_y_local = gaussian_nb_model_local.predict(testing_x)
+    predicted_y_global = sgd_classifier.predict(testing_x)
 
     # Metrics is calculated here
     metric_calculation(predicted_y_global, testing_y)
-    metric_calculation(predicted_y_local, testing_y)
 
 
 def process_data(rdd):

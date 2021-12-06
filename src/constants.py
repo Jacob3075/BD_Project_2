@@ -41,3 +41,5 @@ class Constants:
         KEY_X,
         KEY_Y,
     ]
+
+    CATEGORY_LEN = 39
